@@ -8,6 +8,7 @@ WriteMakefile(
   PREREQ_PM => {
     'Mojolicious' => '6.56',
     'List::Util' => 0,
+    'Time::HiRes' => 0,
     },
   test      => {TESTS => 't/*.t'}
 );
