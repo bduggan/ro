@@ -21,11 +21,8 @@ for my $p (1..$count) {
 }
 
 my $i = 0;
-my @played;
 for (@players) {
-  my $play = [ qw/rock scissors paper/ ]->[++$i % 3];
-  push @played, $play;
-  $_ = $_->send( $play );
+  $_->send( [ qw/rock scissors paper/ ]->[++$i % 3] );
 }
 
 my @results;
