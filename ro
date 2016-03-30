@@ -4,35 +4,66 @@ use Mojolicious::Lite;
 use Time::Hires qw/time/;
 use List::Util qw/max/;
 use experimental 'signatures';
+use lib '.';
+use Room;
 
-my %players;
-my %pairs;
+sub debug($) { app->log->debug(@_) }
+
+my %players;     # $id => $tx
+my $room = Room->new;
+
+helper notify => sub ($c,$who,$what) {
+  $players{$who}->send("winner: $what");
+};
 
 helper new_user => sub($c) {
   state $i = 1;
   return $i++;
 };
 
-helper pair   => sub($c,$id) { };
-helper played => sub($c,$id) { };
-helper winner => sub($c,$us,$them) { };
+my %better_than = ( rock => 'scissors', paper => 'rock', 'scissors' => 'paper' );
+helper winner => sub($c,$one,$two) {
+  return $one if $better_than{$one} eq $two;
+  return $two if $better_than{$two} eq $one;
+  return 'tie';
+};
 
 websocket '/ready' => sub($c) {
+  # $us, $them are ids
+  # $ours, $theirs are rock/scissors/paper
   $c->on(message => sub ($c,$msg) {
-     $msg eq 'hello' or return $c->app->log->debug('did not say hello');
-     my $id = $c->new_user;
-     $c->app->log->debug("Got hello, new user $id");
+     $msg eq 'hello' or return debug 'did not say hello';
+     my $us = $c->new_user;
+     debug "New user: $us";
      my $tx = $c->tx;
-     $players{$id} = $tx;
-     $tx->send("welcome $id");
+     $players{$us} = $tx;
+     $tx->send("welcome: $us");
      $c->tx->unsubscribe('message');
-     $tx->on(message => sub ($tx, $msg) {
-       $c->app->log->debug("playing");
-       my $partner = $c->pair($id);
-       $msg =~ /^(rock|scissors|paper)$/ or return $tx->send("wat? ($msg)");
-       my $played = $1;
-       if (my $other = $c->played($partner)) {
-         $tx->send("winner:".$c->winner($played,$other));
+     $tx->on(message => sub ($tx, $ours) {
+       $ours =~ /^(rock|scissors|paper)$/ or return $tx->send("wat? ($ours)");
+       debug "received play by $us ($ours)";
+       my $them;
+       if ($them = $room->has_partner($us)) {
+           debug "$us already has partner $them";
+           if (my $theirs = $c->played($them) ) {
+               $tx->send("winner: ".$c->winner($ours,$theirs));
+           } else {
+               debug "waiting for play_by:$them";
+               $room->on("play_by:$them" => sub ($tx, $msg) {
+                  $tx->send("winner: ".$c->winner($ours,$theirs));
+                  $room->unsubscribe("play_by:$them");
+               });
+           }
+       } else {
+           debug "$us has no partner, entering the room";
+           $room->enter($us, $ours);
+           $room->on("unpaired_player", sub ($room, $them, $theirs) {
+               debug "$us taking new player: $them who played $theirs";
+               $room->pair_up($us,$them);
+               my $winner = $c->winner($ours,$theirs);
+               $c->notify($them, $winner);
+               $tx->send("winner: $winner");
+           });
        }
      });
   });
