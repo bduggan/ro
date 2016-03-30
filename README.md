@@ -8,13 +8,13 @@
 
 2. test
 
-   ./mo test
+   ./ro test
 
    or
 
-  ./mo test -v
+  ./ro test -v
 
 3. Run
 
-    ./mo run
+    ./ro run
 

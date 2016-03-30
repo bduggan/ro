@@ -28,10 +28,11 @@ $p2 = $p2->send('scissors');
 my ($p1_result, $p2_result);
 $p1->on(message => sub($c,$msg) { $p1_result = $msg; });
 $p2->on(message => sub($c,$msg) { $p2_result = $msg; });
-Mojo::IOLoop->timer(2 => sub { shift->stop } )->start;
+Mojo::IOLoop->timer(1 => sub { shift->stop } );
+Mojo::IOLoop->start;
 
-is $p1_result, "winner: rock";
-is $p2_result, "winner: rock";
+is $p1_result, "winner: rock, you: win";
+is $p2_result, "winner: rock, you: lose";
 
 done_testing();
 

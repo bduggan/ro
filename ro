@@ -12,8 +12,9 @@ sub debug($) { app->log->debug(@_) }
 my %players;     # $id => $tx
 my $room = Room->new;
 
-helper notify => sub ($c,$who,$what) {
-  $players{$who}->send("winner: $what");
+helper notify => sub ($c,$who,$what,$winner) {
+  my $status = $what eq $winner ? 'win' : 'lose';
+  $players{$who}->send("winner: $winner, you: $status");
 };
 
 helper new_user => sub($c) {
@@ -44,6 +45,7 @@ websocket '/ready' => sub($c) {
        debug "received play by $us ($ours)";
        my $them;
        if ($them = $room->has_partner($us)) {
+           # TODO
            debug "$us already has partner $them";
            if (my $theirs = $c->played($them) ) {
                $tx->send("winner: ".$c->winner($ours,$theirs));
@@ -61,8 +63,8 @@ websocket '/ready' => sub($c) {
                debug "$us taking new player: $them who played $theirs";
                $room->pair_up($us,$them);
                my $winner = $c->winner($ours,$theirs);
-               $c->notify($them, $winner);
-               $tx->send("winner: $winner");
+               $c->notify($us, $ours, $winner);
+               $c->notify($them, $theirs, $winner);
            });
        }
      });
