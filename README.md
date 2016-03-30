@@ -6,7 +6,7 @@
    Install perlbrew from http://perlbrew.pl
    perlbrew install perl-5.22.0
    perlbrew install-cpanm
-   cpanm install-deps .
+   cpanm --installdeps .
 
 2. Test.
 
