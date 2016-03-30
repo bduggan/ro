@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/bduggan/ro.svg?branch=master)](https://travis-ci.org/bduggan/ro)
+
 ```
 1. Install deps
 
