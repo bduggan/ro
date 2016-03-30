@@ -16,7 +16,7 @@ for my $p (1..$count) {
   $t->websocket_ok('/ready')
      ->send_ok('hello')
      ->message_ok
-     ->message_like(qr/welcome:(.*)/);
+     ->json_message_like('/welcome' => qr/\d/);
   push @players, $t->tx;
 }
 
@@ -29,16 +29,16 @@ my @results;
 $i = 0;
 for my $p (@players) {
   my $j = $i;
-  $p->on(message => sub($c,$msg) { $results[$j] = $msg; });
+  $p->on(json => sub($c,$msg) { $results[$j] = $msg; });
   ++$i;
 }
 
 Mojo::IOLoop->timer(3 => sub { shift->stop } );
 Mojo::IOLoop->start;
 
-my $wins   = grep /you: win/,  @results;
-my $losses = grep /you: lose/, @results;
-my $ties   = grep /tie/,       @results;
+my $wins   = grep {$_->{you} eq 'win'}  @results;
+my $losses = grep {$_->{you} eq 'lose'} @results;
+my $ties   = grep {$_->{you} eq 'tie'}  @results;
 is $wins + $losses + $ties, $count, "$count results";
 is $wins, $losses, "same number of wins as losses";
 

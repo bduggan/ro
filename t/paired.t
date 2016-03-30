@@ -10,7 +10,8 @@ my $t = Test::Mojo->new;
 
 sub enter {
  $t->websocket_ok('/ready')->send_ok('hello')
-   ->message_ok->message_like(qr/welcome: \d/)
+   ->message_ok
+   ->json_message_like('/welcome' => qr/\d/)
    ->tx
 }
 
@@ -23,7 +24,7 @@ $pair[1]->send('paper');
 
 my @results;
 for my $i (0,1) {
-  $pair[$i]->on(message => sub($c,$msg) { $results[$i] = $msg });
+  $pair[$i]->on(json => sub($c,$msg) { $results[$i] = $msg });
 }
 
 Mojo::IOLoop->timer(1 => sub { shift->stop } );
@@ -40,8 +41,8 @@ $pair[1]->send('scissors');
 Mojo::IOLoop->timer(1 => sub { shift->stop } );
 Mojo::IOLoop->start;
 
-is $results[0], 'winner: scissors, you: lose, opponent: 2';
-is $results[1], 'winner: scissors, you: win, opponent: 1';
+is_deeply $results[0], {winner=> "scissors", you=> "lose", opponent=> 2};
+is_deeply $results[1], {winner=> "scissors", you=> "win",  opponent=> 1};
 
 done_testing();
 

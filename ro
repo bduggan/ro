@@ -13,9 +13,12 @@ my %players;     # $id => $tx
 my $room = Room->new;
 
 helper notify => sub ($c,$who,$what,$winner,$opponent) {
-  return $players{$who}->send("you: tie, opponent: $opponent") if $winner eq 'tie';
+  return $players{$who}->send({ json => {
+    you => 'tie', opponent => $opponent
+  }}) if $winner eq 'tie';
   my $status = $what eq $winner ? 'win' : 'lose';
-  $players{$who}->send("winner: $winner, you: $status, opponent: $opponent");
+  $players{$who}->send({ json => {
+    winner => $winner, you => $status, opponent => $opponent}});
 };
 
 helper new_player => sub($c) {
@@ -46,11 +49,12 @@ websocket '/ready' => sub($c) {
      my $us = $c->new_player;
      debug "New player: $us";
      my $tx = $c->tx;
-     $tx->send("welcome: $us");
+     $tx->send({ json => { welcome => $us } });
      $players{$us} = $tx;
      $tx->unsubscribe('message');
      $tx->on(message => sub ($tx, $ours) {
-       $ours =~ /^(rock|paper|scissors)$/ or return $tx->send("wat? ($ours)");
+       $ours =~ /^(rock|paper|scissors)$/
+         or return $tx->send({ json => { error => "wat? ($ours)" } });
        debug "$us plays $ours";
        my $them;
        if ($them = $room->has_partner($us)) {
