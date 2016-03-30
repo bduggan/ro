@@ -7,9 +7,12 @@ use experimental 'signatures';
 require 'ro';
 
 my $t = Test::Mojo->new;
+$t->ua->inactivity_timeout(120);
+
+my $count = 100;
 
 my @players;
-for my $p (0..100) {
+for my $p (1..$count) {
   $t->websocket_ok('/ready')
      ->send_ok('hello')
      ->message_ok
@@ -39,7 +42,7 @@ Mojo::IOLoop->start;
 my $wins   = grep /you: win/,  @results;
 my $losses = grep /you: lose/, @results;
 my $ties   = grep /tie/,       @results;
-is $wins + $losses + $ties, 100, '100 results';
+is $wins + $losses + $ties, $count, "$count results";
 is $wins, $losses, "same number of wins as losses";
 
 done_testing();
