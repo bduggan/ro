@@ -37,7 +37,7 @@ helper winner => sub($c,$one,$two) {
   return 'tie';
 };
 
-helper go => sub ($c,$p1,$p2,$h1,$h2) {
+helper shoot => sub ($c,$p1,$p2,$h1,$h2) {
   # play: player 1,2 hand 1,2
   my $winner = $c->winner($h1,$h2);
   $c->notify($p1, $h1, $winner, $p2);
@@ -53,6 +53,8 @@ websocket '/ready' => sub($c) {
   # $us, $them are ids
   # $ours, $theirs are rock/paper/scissors
   $c->on(message => sub ($c,$msg) {
+
+     # Establish connection but don't pair until we play.
      $msg eq 'hello' or return debug 'did not say hello';
      my $us = $c->new_player;
      debug "New player: $us";
@@ -60,30 +62,25 @@ websocket '/ready' => sub($c) {
      $tx->send({ json => { welcome => $us } });
      $players{$us} = $tx;
      $tx->unsubscribe('message');
+
      $tx->on(message => sub ($tx, $ours) {
-       $ours =~ /^(rock|paper|scissors)$/
-         or return $tx->send({ json => { error => "wat? ($ours)" } });
+       $ours =~ /^(rock|paper|scissors)$/ or return $tx->send({ json => { error => "wat? ($ours)" } });
        debug "$us plays $ours";
-       my $them;
-       if ($them = $room->has_partner($us)) {
-           $room->play($us, $ours);
-           debug "$us already has partner $them";
+       if (my $them = $room->has_partner($us)) {
+           $room->reveal($us, $ours);
            if (my $theirs = $room->played($them) ) {
-               $c->go($us,$them,$ours,$theirs);
+               $c->shoot($us,$them,$ours,$theirs);
            } else {
-               debug "waiting for play_by:$them";
                $room->on("play_by:$them" => sub ($tx, $theirs) {
-                  $c->go($us,$them,$ours,$theirs);
+                  $c->shoot($us,$them,$ours,$theirs);
                   $room->unsubscribe("play_by:$them");
                });
            }
        } else {
-           debug "$us has no partner, entering the room";
            $room->enter($us, $ours);
            $room->on("seek", sub ($room, $them, $theirs) {
                $room->pair_up($us,$them) or return;
-               debug "new pair : $us vs $them ($ours vs $theirs)";
-               $c->go($us,$them,$ours,$theirs);
+               $c->shoot($us,$them,$ours,$theirs);
            });
        }
      });

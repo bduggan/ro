@@ -16,7 +16,7 @@ sub has_partner($s,$id) {
 }
 
 sub enter($s,$who,$what) {
-  $s->play($who, $what);
+  $s->reveal($who, $what);
   $s->emit(seek => $who, $what);
 }
 
@@ -31,7 +31,7 @@ sub played($s,$id) {
   return $played{$id};
 }
 
-sub play($s,$id,$what) {
+sub reveal($s,$id,$what) {
   warn "$id already played" if $played{$id};
   $played{$id} = $what;
   $played_at{$id} = time;
