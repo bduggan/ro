@@ -5,6 +5,7 @@
 
    Install perlbrew from http://perlbrew.pl
    perlbrew install perl-5.22.0
+   perlbrew switch perl-5.22.0
    perlbrew install-cpanm
    cpanm --installdeps .
 
