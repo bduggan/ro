@@ -18,7 +18,7 @@ helper notify => sub ($c,$who,$what,$winner) {
   $players{$who}->send("winner: $winner, you: $status");
 };
 
-helper new_user => sub($c) {
+helper new_player => sub($c) {
   state $i = 1;
   return $i++;
 };
@@ -30,30 +30,38 @@ helper winner => sub($c,$one,$two) {
   return 'tie';
 };
 
+helper go => sub ($c,$p1,$p2,$h1,$h2) {
+  # play: player 1,2 hand 1,2
+  my $winner = $c->winner($h1,$h2);
+  $c->notify($p1, $h1, $winner);
+  $c->notify($p2, $h2, $winner);
+  $room->game_over($p1,$p2);
+};
+
 websocket '/ready' => sub($c) {
   # $us, $them are ids
   # $ours, $theirs are rock/paper/scissors
   $c->on(message => sub ($c,$msg) {
      $msg eq 'hello' or return debug 'did not say hello';
-     my $us = $c->new_user;
-     debug "New user: $us";
+     my $us = $c->new_player;
+     debug "New player: $us";
      my $tx = $c->tx;
-     $players{$us} = $tx;
      $tx->send("welcome: $us");
-     $c->tx->unsubscribe('message');
+     $players{$us} = $tx;
+     $tx->unsubscribe('message');
      $tx->on(message => sub ($tx, $ours) {
        $ours =~ /^(rock|paper|scissors)$/ or return $tx->send("wat? ($ours)");
-       debug "received play by $us ($ours)";
+       debug "$us plays $ours";
        my $them;
        if ($them = $room->has_partner($us)) {
-           # TODO
+           $room->play($us, $ours);
            debug "$us already has partner $them";
-           if (my $theirs = $c->played($them) ) {
-               $tx->send("winner: ".$c->winner($ours,$theirs));
+           if (my $theirs = $room->played($them) ) {
+               $c->go($us,$them,$ours,$theirs);
            } else {
                debug "waiting for play_by:$them";
-               $room->on("play_by:$them" => sub ($tx, $msg) {
-                  $tx->send("winner: ".$c->winner($ours,$theirs));
+               $room->on("play_by:$them" => sub ($tx, $theirs) {
+                  $c->go($us,$them,$ours,$theirs);
                   $room->unsubscribe("play_by:$them");
                });
            }
@@ -62,10 +70,8 @@ websocket '/ready' => sub($c) {
            $room->enter($us, $ours);
            $room->on("unpaired_player", sub ($room, $them, $theirs) {
                $room->pair_up($us,$them) or return;
-               my $winner = $c->winner($ours,$theirs);
                debug "new pair : $us vs $them ($ours vs $theirs)";
-               $c->notify($us, $ours, $winner);
-               $c->notify($them, $theirs, $winner);
+               $c->go($us,$them,$ours,$theirs);
            });
        }
      });
