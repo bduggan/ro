@@ -7,12 +7,17 @@ require 'ro';
 
 my $t = Test::Mojo->new;
 
-# One player.
-$t->get_ok('/ready')->status_is(200)->json_is({welcome => 1});
-$t->post_ok('/set')->status_is(200)->json_is({ players => 1 });
-$t->post_ok('/go' => json => { choice => 'rock' } )
-  ->status_is(200)
-  ->json_is({outcome => 'mu'});
+# player 1
+$t->websocket_ok('/ready')
+   ->send_ok('hello')
+   ->message_ok
+   ->message_is('welcome 1');
+
+# player 2
+$t->websocket_ok('/ready')
+   ->send_ok('hello')
+   ->message_ok
+   ->message_is('welcome 2');
 
 done_testing();
 

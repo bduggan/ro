@@ -6,64 +6,33 @@ use List::Util qw/max/;
 use experimental 'signatures';
 
 my %players;
-my %results;
+my %pairs;
 
 helper new_user => sub($c) {
   state $i = 1;
-  $c->session(id => ++$i);
-  return $i - 1;
+  return $i++;
 };
 
-helper player => sub($c) {
-  return $c->session('id');
-};
+helper pair   => sub($c,$id) { };
+helper played => sub($c,$id) { };
+helper winner => sub($c,$us,$them) { };
 
-# outcome:
-#   win, loss, tie, mu
-helper outcome => sub($c,$choice) {
-  # Case 0: one player: mu
-  return 'mu' if keys %results==1;
-
-  # TODO:
-  # Case 1: only two of (R,S,P) chosen: R>S, S>P, P>R
-  #
-  # Case 2: R==S and P < R : R wins
-  # (and permutations)
-  #
-  # Case 3: R==S and P > R
-  # some paper covers rocks, other paper cut by scissors
-  #      subcase a : P > 2R  paper wins (paper left over)
-  #      subcase b : P <= 2R  rock wins
-  # (and permutations)
-  #
-  # Case 4: R==S==P
-  # tie
-};
-
-get '/ready' => sub($c) {
-  $c->render(json => { welcome => $c->new_user } );
-};
-
-post '/set' => sub($c) {
-  my $player = $c->player;
-  $players{ $player } = { started => time };
-  Mojo::IOLoop->timer( 3 => sub {
-    delete $players{ $player };
+websocket '/ready' => sub($c) {
+  $c->on(message => sub ($c,$msg) {
+     $msg eq 'hello' or return $c->app->debug('did not say hello');
+     my $id = $c->new_user;
+     my $tx = $c->tx;
+     $players{$id} = $tx;
+     $tx->send("welcome $id");
+     $tx->on(message => sub ($tx, $msg) {
+       my $partner = $c->pair($id);
+       $msg =~ /^(rock|scissors|paper)$/ or return $tx->send("wat?");
+       my $played = $1;
+       if (my $other = $c->played($partner)) {
+         $tx->send("winner:".$c->winner($played,$other));
+       }
+     });
   });
-  $c->render( json => { players => scalar keys %players } );
-};
-
-post '/go' => sub($c) {
-  my $choice = $c->req->json->{choice} or return $c->reply->exception("no choice");
-  $results{$choice}++;
-  # TODO use delay
-  Mojo::IOLoop->timer(1 => sub {
-    $c->render(
-        json => {
-            outcome => $c->outcome($choice)
-        }
-    );
-  })
 };
 
 app->start;

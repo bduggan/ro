@@ -10,6 +10,10 @@
 
    ./mo test
 
+   or
+
+  ./mo test -v
+
 3. Run
 
     ./mo run
