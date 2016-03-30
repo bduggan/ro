@@ -10,7 +10,7 @@
 
 2. Test.
 
-  ./ro test -v
+  ./ro test
 
 3. Run.
 
