@@ -59,9 +59,9 @@ websocket '/ready' => sub($c) {
            debug "$us has no partner, entering the room";
            $room->enter($us, $ours);
            $room->on("unpaired_player", sub ($room, $them, $theirs) {
-               debug "$us taking new player: $them who played $theirs";
-               $room->pair_up($us,$them);
+               $room->pair_up($us,$them) or return;
                my $winner = $c->winner($ours,$theirs);
+               debug "new pair : $us vs $them ($ours vs $theirs)";
                $c->notify($us, $ours, $winner);
                $c->notify($them, $theirs, $winner);
            });

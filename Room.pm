@@ -17,6 +17,8 @@ sub enter($s,$who, $what) {
 }
 
 sub pair_up($s,$one,$two) {
+  return if $partner_for{$one};
+  return if $partner_for{$two};
   $partner_for{$one} = $two;
   $partner_for{$two} = $one;
 }
