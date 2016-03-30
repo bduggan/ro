@@ -12,6 +12,10 @@ sub debug($) { app->log->debug(@_) }
 my %players;     # $id => $tx
 my $room = Room->new;
 
+app->hook(after_dispatch => sub($c) {
+  $c->res->headers->header('Access-Control-Allow-Origin' => '*');
+});
+
 helper notify => sub ($c,$who,$what,$winner,$opponent) {
   return $players{$who}->send({ json => {
     you => 'tie', opponent => $opponent
@@ -39,6 +43,10 @@ helper go => sub ($c,$p1,$p2,$h1,$h2) {
   $c->notify($p1, $h1, $winner, $p2);
   $c->notify($p2, $h2, $winner, $p1);
   $room->game_over($p1,$p2);
+};
+
+get '/' => sub ($c) {
+  $c->render(text => "Welcome to ro.  Make a websocket connection to /ready.\n");
 };
 
 websocket '/ready' => sub($c) {
