@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
 use v5.20;
 use Mojolicious::Lite;
-use Time::Hires qw/time/;
 use List::Util qw/max/;
 use experimental 'signatures';
 use lib '.';
