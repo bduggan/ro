@@ -6,12 +6,14 @@ use experimental 'signatures';
 use lib '.';
 use Room;
 
+$ENV{MOJO_INACTVITIY_TIMEOUT} = 120;
 sub debug($) { app->log->debug(@_) }
 
 my %players;     # $id => $tx
 my $room = Room->new;
 
 helper notify => sub ($c,$who,$what,$winner) {
+  return $players{$who}->send("tie") if $winner eq 'tie';
   my $status = $what eq $winner ? 'win' : 'lose';
   $players{$who}->send("winner: $winner, you: $status");
 };
