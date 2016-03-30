@@ -31,8 +31,8 @@ $p2->on(message => sub($c,$msg) { $p2_result = $msg; });
 Mojo::IOLoop->timer(1 => sub { shift->stop } );
 Mojo::IOLoop->start;
 
-is $p1_result, "winner: rock, you: win";
-is $p2_result, "winner: rock, you: lose";
+is $p1_result, "winner: rock, you: win, opponent: 2";
+is $p2_result, "winner: rock, you: lose, opponent: 1";
 
 done_testing();
 

@@ -35,7 +35,12 @@ Mojo::IOLoop->timer(4 => sub { shift->stop } );
 
 Mojo::IOLoop->start;
 
-is_deeply \@results, [('tie') x 4], 'four ties';
+is_deeply \@results,
+  ['you: tie, opponent: 3',
+   'you: tie, opponent: 4',
+   'you: tie, opponent: 1',
+   'you: tie, opponent: 2',
+  ], 'ties';
 
 done_testing();
 

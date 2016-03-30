@@ -12,10 +12,10 @@ sub debug($) { app->log->debug(@_) }
 my %players;     # $id => $tx
 my $room = Room->new;
 
-helper notify => sub ($c,$who,$what,$winner) {
-  return $players{$who}->send("tie") if $winner eq 'tie';
+helper notify => sub ($c,$who,$what,$winner,$opponent) {
+  return $players{$who}->send("you: tie, opponent: $opponent") if $winner eq 'tie';
   my $status = $what eq $winner ? 'win' : 'lose';
-  $players{$who}->send("winner: $winner, you: $status");
+  $players{$who}->send("winner: $winner, you: $status, opponent: $opponent");
 };
 
 helper new_player => sub($c) {
@@ -33,8 +33,8 @@ helper winner => sub($c,$one,$two) {
 helper go => sub ($c,$p1,$p2,$h1,$h2) {
   # play: player 1,2 hand 1,2
   my $winner = $c->winner($h1,$h2);
-  $c->notify($p1, $h1, $winner);
-  $c->notify($p2, $h2, $winner);
+  $c->notify($p1, $h1, $winner, $p2);
+  $c->notify($p2, $h2, $winner, $p1);
   $room->game_over($p1,$p2);
 };
 

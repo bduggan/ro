@@ -40,8 +40,8 @@ $pair[1]->send('scissors');
 Mojo::IOLoop->timer(1 => sub { shift->stop } );
 Mojo::IOLoop->start;
 
-is $results[0], 'winner: scissors, you: lose';
-is $results[1], 'winner: scissors, you: win';
+is $results[0], 'winner: scissors, you: lose, opponent: 2';
+is $results[1], 'winner: scissors, you: win, opponent: 1';
 
 done_testing();
 
