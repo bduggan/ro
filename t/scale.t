@@ -36,9 +36,9 @@ for my $p (@players) {
 Mojo::IOLoop->timer(3 => sub { shift->stop } );
 Mojo::IOLoop->start;
 
-my $wins = grep /you: win/, @results;
+my $wins   = grep /you: win/,  @results;
 my $losses = grep /you: lose/, @results;
-my $ties = grep /tie/, @results;
+my $ties   = grep /tie/,       @results;
 is $wins + $losses + $ties, 100, '100 results';
 is $wins, $losses, "same number of wins as losses";
 
