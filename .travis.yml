@@ -1,0 +1,2 @@
+language: perl
+  - "5.22"
