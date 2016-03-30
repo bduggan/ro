@@ -19,14 +19,17 @@ helper winner => sub($c,$us,$them) { };
 
 websocket '/ready' => sub($c) {
   $c->on(message => sub ($c,$msg) {
-     $msg eq 'hello' or return $c->app->debug('did not say hello');
+     $msg eq 'hello' or return $c->app->log->debug('did not say hello');
      my $id = $c->new_user;
+     $c->app->log->debug("Got hello, new user $id");
      my $tx = $c->tx;
      $players{$id} = $tx;
      $tx->send("welcome $id");
+     $c->tx->unsubscribe('message');
      $tx->on(message => sub ($tx, $msg) {
+       $c->app->log->debug("playing");
        my $partner = $c->pair($id);
-       $msg =~ /^(rock|scissors|paper)$/ or return $tx->send("wat?");
+       $msg =~ /^(rock|scissors|paper)$/ or return $tx->send("wat? ($msg)");
        my $played = $1;
        if (my $other = $c->played($partner)) {
          $tx->send("winner:".$c->winner($played,$other));
