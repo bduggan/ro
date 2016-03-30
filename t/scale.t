@@ -22,7 +22,7 @@ for my $p (1..$count) {
 
 my $i = 0;
 for (@players) {
-  $_->send( [ qw/rock scissors paper/ ]->[++$i % 3] );
+  $_->send( [ qw/rock paper scissors/ ]->[++$i % 3] );
 }
 
 my @results;

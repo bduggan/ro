@@ -32,7 +32,7 @@ helper winner => sub($c,$one,$two) {
 
 websocket '/ready' => sub($c) {
   # $us, $them are ids
-  # $ours, $theirs are rock/scissors/paper
+  # $ours, $theirs are rock/paper/scissors
   $c->on(message => sub ($c,$msg) {
      $msg eq 'hello' or return debug 'did not say hello';
      my $us = $c->new_user;
@@ -42,7 +42,7 @@ websocket '/ready' => sub($c) {
      $tx->send("welcome: $us");
      $c->tx->unsubscribe('message');
      $tx->on(message => sub ($tx, $ours) {
-       $ours =~ /^(rock|scissors|paper)$/ or return $tx->send("wat? ($ours)");
+       $ours =~ /^(rock|paper|scissors)$/ or return $tx->send("wat? ($ours)");
        debug "received play by $us ($ours)";
        my $them;
        if ($them = $room->has_partner($us)) {
