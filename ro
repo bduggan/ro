@@ -42,7 +42,7 @@ helper go => sub ($c,$p1,$p2,$h1,$h2) {
   my $winner = $c->winner($h1,$h2);
   $c->notify($p1, $h1, $winner, $p2);
   $c->notify($p2, $h2, $winner, $p1);
-  $room->game_over($p1,$p2);
+  debug $room->game_over($p1,$p2);
 };
 
 get '/' => sub ($c) {
@@ -80,7 +80,7 @@ websocket '/ready' => sub($c) {
        } else {
            debug "$us has no partner, entering the room";
            $room->enter($us, $ours);
-           $room->on("unpaired_player", sub ($room, $them, $theirs) {
+           $room->on("seek", sub ($room, $them, $theirs) {
                $room->pair_up($us,$them) or return;
                debug "new pair : $us vs $them ($ours vs $theirs)";
                $c->go($us,$them,$ours,$theirs);
