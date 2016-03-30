@@ -1,3 +1,4 @@
+```
 1. Install deps
 
    see http://perlbrew.pl
@@ -8,13 +9,10 @@
 
 2. test
 
-   ./ro test
-
-   or
-
   ./ro test -v
 
 3. Run
 
     ./ro run
 
+```
