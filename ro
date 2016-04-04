@@ -16,13 +16,13 @@ app->hook(after_dispatch => sub($c) {
   $c->res->headers->header('Access-Control-Allow-Origin' => '*');
 });
 
-helper notify => sub ($c,$who,$what,$winner,$opponent) {
+helper notify => sub ($c,$who,$what,$winner,$them,$theirs) {
   return $players{$who}->send({ json => {
-    you => 'tie', opponent => $opponent
+    you => 'tie', opponent => $them, yours => $what, theirs => $what
   }}) if $winner eq 'tie';
   my $status = $what eq $winner ? 'win' : 'lose';
   $players{$who}->send({ json => {
-    winner => $winner, you => $status, opponent => $opponent}});
+    you => $status, opponent => $them, yours => $what, theirs => $theirs}});
 };
 
 helper new_player => sub($c) {
@@ -40,8 +40,8 @@ helper winner => sub($c,$one,$two) {
 helper shoot => sub ($c,$p1,$p2,$h1,$h2) {
   # play: player 1,2 hand 1,2
   my $winner = $c->winner($h1,$h2);
-  $c->notify($p1, $h1, $winner, $p2);
-  $c->notify($p2, $h2, $winner, $p1);
+  $c->notify($p1, $h1, $winner, $p2, $h2);
+  $c->notify($p2, $h2, $winner, $p1, $h1);
   debug $room->game_over($p1,$p2);
 };
 
