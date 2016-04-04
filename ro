@@ -6,7 +6,7 @@ use experimental 'signatures';
 use lib '.';
 use Room;
 
-$ENV{MOJO_INACTVITIY_TIMEOUT} = 120;
+$ENV{MOJO_INACTIVITY_TIMEOUT} = 120;
 sub debug($) { app->log->debug(@_) }
 
 my %players;     # $id => $tx
