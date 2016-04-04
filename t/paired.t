@@ -41,8 +41,8 @@ $pair[1]->send('scissors');
 Mojo::IOLoop->timer(1 => sub { shift->stop } );
 Mojo::IOLoop->start;
 
-is_deeply $results[0], {winner=> "scissors", you=> "lose", opponent=> 2};
-is_deeply $results[1], {winner=> "scissors", you=> "win",  opponent=> 1};
+is_deeply $results[0], { you=> "lose", opponent=> 2, yours=> "paper", theirs=> "scissors"};
+is_deeply $results[1], { you=> "win",  opponent=> 1, yours=> "scissors", theirs=> "paper"};
 
 done_testing();
 
