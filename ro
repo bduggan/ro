@@ -10,19 +10,25 @@ $ENV{MOJO_INACTIVITY_TIMEOUT} = 120;
 sub debug($) { app->log->debug(@_) }
 
 my %players;     # $id => $tx
-my $room = Room->new;
+my $room = Room->new(log => app->log);
 
 app->hook(after_dispatch => sub($c) {
   $c->res->headers->header('Access-Control-Allow-Origin' => '*');
 });
 
-helper notify => sub ($c,$who,$what,$winner,$them,$theirs) {
-  return $players{$who}->send({ json => {
-    you => 'tie', opponent => $them, yours => $what, theirs => $what
-  }}) if $winner eq 'tie';
-  my $status = $what eq $winner ? 'win' : 'lose';
-  $players{$who}->send({ json => {
-    you => $status, opponent => $them, yours => $what, theirs => $theirs}});
+helper notify => sub ($c,$us,$ours,$winner,$them,$theirs, $game) {
+  my $status = $ours eq $theirs ? 'tie'
+             : $ours eq $winner ? 'win'
+             : 'lose';
+$players{$us}->send({
+        json => {
+            you      => $status,
+            yours    => $ours,
+            opponent => $them,
+            theirs   => $theirs,
+            game     => $game
+        }
+    });
 };
 
 helper new_player => sub($c) {
@@ -40,9 +46,9 @@ helper winner => sub($c,$one,$two) {
 helper shoot => sub ($c,$p1,$p2,$h1,$h2) {
   # play: player 1,2 hand 1,2
   my $winner = $c->winner($h1,$h2);
-  $c->notify($p1, $h1, $winner, $p2, $h2);
-  $c->notify($p2, $h2, $winner, $p1, $h1);
-  debug $room->game_over($p1,$p2);
+  my $id = $room->game_over($p1,$p2);
+  $c->notify($p1, $h1, $winner, $p2, $h2, $id);
+  $c->notify($p2, $h2, $winner, $p1, $h1, $id);
 };
 
 get '/' => sub ($c) {

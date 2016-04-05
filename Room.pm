@@ -10,6 +10,9 @@ use experimental 'signatures';
 my %partner_for; # $id => $id
 my %played;      # $id => rock|paper|scissors
 my %played_at;   # $id => timestamp
+my $game_id = 0; # autoincrement game id
+
+has 'log';
 
 sub has_partner($s,$id) {
   return $partner_for{$id};
@@ -42,7 +45,9 @@ sub game_over($s,$p1,$p2) {
   my $elapsed = abs $played_at{$p1} - $played_at{$p2};
   delete $played{$_} for $p1, $p2;
   delete $played_at{$_} for $p1, $p2;
-  return "$p1 vs $p2 took $elapsed seconds";
+  $game_id++;
+  $s->log->debug("game $game_id: $p1 vs $p2 took $elapsed seconds");
+  return $game_id;
 }
 
 1;
