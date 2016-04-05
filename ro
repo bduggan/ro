@@ -35,7 +35,7 @@ helper notify => sub ($c,$us,$game) {
     });
 };
 
-helper play => sub($us, $ours, $game) {
+helper play => sub($c, $us, $ours, $game) {
   $game->shoot($us => $ours);
   $c->notify($_ => $game) for $game->players;
   $room->leave_game($_) for $game->players;
@@ -82,7 +82,7 @@ websocket '/ready' => sub($c) {
            }
        } else {
            if (my $game = $room->want_game($us, $ours)) {
-             $room->pair_up($game->players);
+             $room->pair_up($game->players, $us);
              $c->play($us, $ours, $game);
            }
        }
