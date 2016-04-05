@@ -37,7 +37,7 @@ Mojo::IOLoop->start;
 is +@results, 2, "got two results";
 
 # Play more times.
-for (2,3) {
+for (2,3,4,5) {
   $pair[0]->send('paper');
   $pair[1]->send('scissors');
   @results = ();
