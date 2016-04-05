@@ -31,7 +31,7 @@ for my $i (0,1) {
   });
 }
 
-Mojo::IOLoop->timer(1 => sub { shift->stop } );
+Mojo::IOLoop->timer(0.1 => sub { shift->stop } );
 Mojo::IOLoop->start;
 
 is +@results, 2, "got two results";
@@ -42,7 +42,7 @@ for (1) {
   $pair[1]->send('scissors');
   @results = ();
   diag " ---------------------- next game ---------------------------";
-  Mojo::IOLoop->timer(5 => sub { shift->stop } );
+  Mojo::IOLoop->timer(0.1 => sub { shift->stop } );
   Mojo::IOLoop->start;
   is_deeply $results[0], { you=> "lose", opponent=> 2, yours=> "paper", theirs=> "scissors", game => 1 + $_}, "right results";
   is_deeply $results[1], { you=> "win",  opponent=> 1, yours=> "scissors", theirs=> "paper", game => 1 + $_}, "right results";
