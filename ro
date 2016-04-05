@@ -66,32 +66,35 @@ websocket '/ready' => sub($c) {
        $room->playing($us) and return $tx->send({json => { error => "only one hand at a time, please" } });
        debug "$us: $us plays $ours";
        if (my $them = $room->has_partner($us)) {
-           die 'not yet';
-           # debug "$us: $us already has partner $them.";
-           # my $game = $room->playing($them) || $room->start_game_with($them);
-           # $game->reveal($us => $ours);
-           # if (my $theirs = $game->played($them) ) {
-           #     debug "$us: $them has already played ($theirs)";
-           #     $game->shoot;
-           #     $c->notify($us => $game);
-           # } else {
-           #     debug "$us: $them has not played yet";
-           #     $room->once("play_by:$them" => sub ($tx, $theirs) {
-           #        $c->notify($us => $game);
-           #     });
-           # }
+           debug "$us: $us already has partner $them.";
+           if (my $game = $room->playing($them)) {
+             debug "$us: $them played already";
+             $game->shoot($us => $ours);
+             $c->notify($_ => $game) for $game->players;
+             debug $game->summary;
+           } else {
+             debug "$us: new game";
+             $room->add_game($us, $ours);
+             #$room->once("play_by:$them" => sub ($tx,$game) {
+             #  $c->notify($_ => $game) for $game->players;
+             #} );
+           }
        } else {
            if (my $game = $room->want_game($us, $ours)) {
              debug "$us: found a game, playing";
              $game->shoot($us => $ours);
              $c->notify($_ => $game) for $game->players;
+             $room->pair_up($game->players);
              debug $game->summary;
+             $room->leave_game($_) for $game->players;
            } else {
              $room->once("seek", sub ($room, $them, $game) {
                 debug "$us: seek by $them playing";
                 $game->shoot($us => $ours);
                 $c->notify($_ => $game) for $game->players;
+                $room->pair_up($game->players);
                 debug $game->summary;
+                $room->leave_game($_) for $game->players;
              });
            }
        }
