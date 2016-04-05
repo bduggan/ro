@@ -12,7 +12,7 @@ sub has_partner($s,$id) {
   return $partner_for{$id};
 }
 
-sub want_game($s,$who,$what) {
+sub find_game($s,$who,$what) {
   if (@available) {
     return $s->assign($who => shift @available);
   }

@@ -17,6 +17,11 @@ app->hook(after_dispatch => sub($c) {
   $c->res->headers->header('Access-Control-Allow-Origin' => '*');
 });
 
+helper new_player => sub($c) {
+  state $i = 1;
+  return $i++;
+};
+
 helper notify => sub ($c,$us,$game) {
   my $ours = $game->played->{$us};
   my $them = $game->other_player($us);
@@ -42,11 +47,6 @@ helper play => sub($c, $us, $ours, $game) {
   debug $game->summary;
 };
 
-helper new_player => sub($c) {
-  state $i = 1;
-  return $i++;
-};
-
 get '/' => sub ($c) {
   $c->render(text => "Welcome to ro.  Make a websocket connection to /ready.\n");
 };
@@ -56,12 +56,11 @@ get '/games' => sub ($c) {
 };
 
 websocket '/ready' => sub($c) {
-  # $us, $them are ids
-  # $ours, $theirs are rock/paper/scissors
   $c->on(message => sub ($c,$msg) {
-
-     # Establish connection but don't pair until we play.
      $msg eq 'hello' or return debug 'did not say hello';
+
+     # $us, $them are ids
+     # $ours, $theirs are rock/paper/scissors
      my $us = $c->new_player;
      debug "New player: $us";
      my $tx = $c->tx;
@@ -69,23 +68,26 @@ websocket '/ready' => sub($c) {
      $players{$us} = $tx;
      $tx->unsubscribe('message');
 
+     # Establish connection but don't pair until we play.
      $tx->on(message => sub ($tx, $ours) {
-       $ours =~ /^(rock|paper|scissors)$/ or return $tx->send({ json => { error => "wat? ($ours)" } });
-       $room->playing($us) and return $tx->send({json => { error => "only one hand at a time, please" } });
-       debug "$us: $us plays $ours";
+       $ours =~ /^(rock|paper|scissors)$/
+         or return $tx->send({ json => { error => "wat? ($ours)" } });
+       $room->playing($us)
+         and return $tx->send({json => { error => "only one hand at a time, please" } });
 
-       if (my $them = $room->has_partner($us)) {
-           if (my $game = $room->playing($them)) {
-             $c->play($us, $ours, $game);
-           } else {
-             $room->add_game($us, $ours);
-           }
-       } else {
-           if (my $game = $room->want_game($us, $ours)) {
-             $room->pair_up($game->players, $us);
-             $c->play($us, $ours, $game);
-           }
-       }
+       debug "$us: $us plays $ours";
+       # Do they have a partner?
+       my $them = $room->has_partner($us) or do {
+           # Is there a game in progress?
+           my $game = $room->find_game($us, $ours) or return;
+           # Pair and play.
+           $room->pair_up($game->players, $us);
+           return $c->play($us, $ours, $game);
+       };
+       # Have a partner, did they play already?
+       my $game = $room->playing($them) or return $room->add_game($us, $ours);
+       # Partner has played.
+       $c->play($us, $ours, $game);
      });
   });
 };
