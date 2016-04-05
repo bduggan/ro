@@ -41,7 +41,7 @@ for (2,3,4,5) {
   $pair[0]->send('paper');
   $pair[1]->send('scissors');
   @results = ();
-  diag " ---------------------- game $_ ---------------------------";
+  note " ---------------------- game $_ ---------------------------";
   Mojo::IOLoop->timer(0.1 => sub { shift->stop } );
   Mojo::IOLoop->start;
   is_deeply $results[0], { you=> "lose", opponent=> 2, yours=> "paper", theirs=> "scissors", game => $_}, "right results";
