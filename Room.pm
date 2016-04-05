@@ -24,7 +24,8 @@ sub want_game($s,$who,$what) {
   if (@available) {
     return shift @available;
   }
-  my $game = Game->new(played => { $who => $what });
+  my $game = Game->new;
+  $game->shoot($who => $what);
   push @available, $game;
   $s->emit(seek => $who => $game);
   return undef;

@@ -81,11 +81,13 @@ websocket '/ready' => sub($c) {
              debug "$us: found a game, playing";
              $game->shoot($us => $ours);
              $c->notify($_ => $game) for $game->players;
+             debug $game->summary;
            } else {
              $room->once("seek", sub ($room, $them, $game) {
                 debug "$us: seek by $them playing";
                 $game->shoot($us => $ours);
                 $c->notify($_ => $game) for $game->players;
+                debug $game->summary;
              });
            }
        }
