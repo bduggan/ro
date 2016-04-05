@@ -66,6 +66,7 @@ websocket '/ready' => sub($c) {
        $ours =~ /^(rock|paper|scissors)$/ or return $tx->send({ json => { error => "wat? ($ours)" } });
        $room->playing($us) and return $tx->send({json => { error => "only one hand at a time, please" } });
        debug "$us: $us plays $ours";
+
        if (my $them = $room->has_partner($us)) {
            debug "$us: $us already has partner $them.";
            if (my $game = $room->playing($them)) {
@@ -81,22 +82,12 @@ websocket '/ready' => sub($c) {
        } else {
            if (my $game = $room->want_game($us, $ours)) {
              debug "$us: found a game to play ".$game->id;
-             debug Dumper($game);
              $game->shoot($us => $ours);
              $game->set or die "issue with game";
              $c->notify($_ => $game) for $game->players;
              $room->pair_up($game->players);
              debug $game->summary;
              $room->leave_game($_) for $game->players;
-           } else {
-             #$room->once("seek", sub ($room, $them, $game) {
-             #   debug "$us: found a seek by $them";
-             #$game->shoot($us => $ours);
-                #   $c->notify($_ => $game) for $game->players;
-                #   $room->pair_up($game->players);
-                #  debug $game->summary;
-                #$room->leave_game($_) for $game->players;
-                #});
            }
        }
      });

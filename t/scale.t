@@ -9,7 +9,7 @@ require 'ro';
 my $t = Test::Mojo->new;
 $t->ua->inactivity_timeout(120);
 
-my $count = 4;
+my $count = 100;
 
 my @players;
 for my $p (1..$count) {
