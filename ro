@@ -71,6 +71,7 @@ websocket '/ready' => sub($c) {
              debug "$us: $them played already";
              $game->shoot($us => $ours);
              $c->notify($_ => $game) for $game->players;
+             $room->leave_game($_) for $game->players;
              debug $game->summary;
            } else {
              debug "$us: new game";
