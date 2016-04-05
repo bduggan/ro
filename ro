@@ -16,17 +16,20 @@ app->hook(after_dispatch => sub($c) {
   $c->res->headers->header('Access-Control-Allow-Origin' => '*');
 });
 
-helper notify => sub ($c,$us,$ours,$winner,$them,$theirs, $game) {
+helper notify => sub ($c,$us,$game) {
+  my $ours = $game->played->{$us};
+  my $them = $game->other_player($us);
+  my $theirs = $game->played->{$them};
   my $status = $ours eq $theirs ? 'tie'
-             : $ours eq $winner ? 'win'
+             : $ours eq $game->winner ? 'win'
              : 'lose';
-$players{$us}->send({
+  $players{$us}->send({
         json => {
             you      => $status,
             yours    => $ours,
             opponent => $them,
             theirs   => $theirs,
-            game     => $game
+            game     => $game->id
         }
     });
 };
@@ -34,23 +37,6 @@ $players{$us}->send({
 helper new_player => sub($c) {
   state $i = 1;
   return $i++;
-};
-
-my %better_than = ( rock => 'scissors', paper => 'rock', 'scissors' => 'paper' );
-helper winner => sub($c,$one,$two) {
-  return $one if $better_than{$one} eq $two;
-  return $two if $better_than{$two} eq $one;
-  return 'tie';
-};
-
-helper shoot => sub ($c,$p1,$p2,$h1,$h2) {
-  # play: player 1,2 hand 1,2
-  my $winner = $c->winner($h1,$h2);
-  my $id = $room->game_over($p1,$p2);
-  debug "got game id $id";
-  die "--------------------" if $id==-1;
-  $c->notify($p1, $h1, $winner, $p2, $h2, $id);
-  $c->notify($p2, $h2, $winner, $p1, $h1, $id);
 };
 
 get '/' => sub ($c) {
@@ -76,29 +62,32 @@ websocket '/ready' => sub($c) {
        $room->playing($us) and return $tx->send({json => { error => "only one hand at a time, please" } });
        debug "$us: $us plays $ours";
        if (my $them = $room->has_partner($us)) {
-           debug "$us: $us already has partner $them.  $us is revealing $ours";
-           $room->reveal($us, $ours);
-           if (my $theirs = $room->played($them) ) {
-               debug "$us: $them has already played ($theirs)";
-               $c->shoot($us,$them,$ours,$theirs);
-           } else {
-               debug "$us: $them has not played yet";
-               $room->once("play_by:$them" => sub ($tx, $theirs) {
-                  $c->shoot($us,$them,$ours,$theirs);
-               });
-           }
+           die 'not yet';
+           # debug "$us: $us already has partner $them.";
+           # my $game = $room->playing($them) || $room->start_game_with($them);
+           # $game->reveal($us => $ours);
+           # if (my $theirs = $game->played($them) ) {
+           #     debug "$us: $them has already played ($theirs)";
+           #     $game->shoot;
+           #     $c->notify($us => $game);
+           # } else {
+           #     debug "$us: $them has not played yet";
+           #     $room->once("play_by:$them" => sub ($tx, $theirs) {
+           #        $c->notify($us => $game);
+           #     });
+           # }
        } else {
-           $room->enter($us, $ours);
-           $room->once("seek", sub ($room, $them, $theirs) {
-               debug "$us: seek by $them is noticed by $us";
-               $room->pair_up($us,$them) or do {
-                  debug "$us: failed to pair $us and $them";
-                  # XXX resubscribe
-                  return;
-               };
-               debug "$us: seek by $them resulted in pairing with $us";
-               $c->shoot($us,$them,$ours,$theirs);
-           });
+           if (my $game = $room->want_game($us, $ours)) {
+             debug "$us: found a game, playing";
+             $game->shoot($us => $ours);
+             $c->notify($_ => $game) for $game->players;
+           } else {
+             $room->once("seek", sub ($room, $them, $game) {
+                debug "$us: seek by $them playing";
+                $game->shoot($us => $ours);
+                $c->notify($_ => $game) for $game->players;
+             });
+           }
        }
      });
   });

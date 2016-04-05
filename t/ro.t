@@ -26,13 +26,26 @@ $p1 = $p1->send('rock');
 $p2 = $p2->send('scissors');
 
 my ($p1_result, $p2_result);
-$p1->on(json => sub($c,$msg) { $p1_result = $msg; });
-$p2->on(json => sub($c,$msg) { $p2_result = $msg; });
+$p1->on(json => sub($c,$msg) { $p1_result = $msg; is $msg->{error}, undef, 'no errors'; });
+$p2->on(json => sub($c,$msg) { $p2_result = $msg; is $msg->{error}, undef, 'no errors'; });
 Mojo::IOLoop->timer(1 => sub { shift->stop } );
 Mojo::IOLoop->start;
 
-is_deeply $p1_result, {you => "win", opponent => 2, yours => "rock", theirs => "scissors", game => 1};
-is_deeply $p2_result, {you => "lose", opponent => 1, yours => "scissors", theirs => "rock", game => 1};
+is_deeply $p1_result, {
+    you      => "win",
+    opponent => 2,
+    yours    => "rock",
+    theirs   => "scissors",
+    game     => 1
+  }, "right result";
+
+is_deeply $p2_result, {
+    you      => "lose",
+    opponent => 1,
+    yours    => "scissors",
+    theirs   => "rock",
+    game     => 1
+  }, "right result";
 
 done_testing();
 

@@ -3,6 +3,10 @@ use Mojo::Base 'Mojo::EventEmitter';
 use Time::HiRes qw/time/;
 use experimental 'signatures';
 
+use Game;
+
+has 'log';
+
 # events:
 # seek => $id => rock|paper|scissors
 # play_by:$id => rock|paper|scissors
@@ -10,17 +14,20 @@ use experimental 'signatures';
 my %partner_for; # $id => $id
 my %played;      # $id => rock|paper|scissors
 my %played_at;   # $id => timestamp
-my $game_id = 0; # autoincrement game id
-
-has 'log';
+my @available;   # array of open games
 
 sub has_partner($s,$id) {
   return $partner_for{$id};
 }
 
-sub enter($s,$who,$what) {
-  $s->reveal($who, $what);
-  $s->emit(seek => $who, $what);
+sub want_game($s,$who,$what) {
+  if (@available) {
+    return shift @available;
+  }
+  my $game = Game->new(played => { $who => $what });
+  push @available, $game;
+  $s->emit(seek => $who => $game);
+  return undef;
 }
 
 sub pair_up($s,$one,$two) {
@@ -41,23 +48,13 @@ sub reveal($s,$id,$what) {
   $s->emit("play_by:$id" => $what);
 }
 
-sub game_over($s,$p1,$p2) {
-  for ($p1,$p2) {
-    next if $played_at{$_} && $played{$_};
-    $s->log->debug("no timestamp for $_, invalid game");
-    return -1;
-  }
-  if (exists $game_time{$game_id}) {
-    delete $played{$p1};
-    delete $played_at{$p1};
-  } else {
-    $game_time{$game_id} //= abs $played_at{$p1} - $played_at{$p2};
-  }
-  $game_id++;
-  $s->log->debug("game $game_id: $p1 vs $p2 took $elapsed seconds");
-  return $game_id;
-}
-
+# sub game_over($s,$p1,$p2) {
+#   $game_time{$game_id} //= abs $played_at{$p1} - $played_at{$p2};
+#   $game_id++;
+#   $s->log->debug("game $game_id: $p1 vs $p2 took $elapsed seconds");
+#   return $game_id;
+# }
+#
 sub playing($s,$p) {
   return exists($played{$p});
 }
