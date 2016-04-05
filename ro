@@ -5,6 +5,7 @@ use List::Util qw/max/;
 use experimental 'signatures';
 use lib '.';
 use Room;
+use Data::Dumper;
 
 $ENV{MOJO_INACTIVITY_TIMEOUT} = 120;
 sub debug($) { app->log->debug(@_) }
@@ -68,7 +69,7 @@ websocket '/ready' => sub($c) {
        if (my $them = $room->has_partner($us)) {
            debug "$us: $us already has partner $them.";
            if (my $game = $room->playing($them)) {
-             debug "$us: $them played already";
+             debug "$us: $them played already in game ".$game->id;
              $game->shoot($us => $ours);
              $c->notify($_ => $game) for $game->players;
              $room->leave_game($_) for $game->players;
@@ -76,27 +77,26 @@ websocket '/ready' => sub($c) {
            } else {
              debug "$us: new game";
              $room->add_game($us, $ours);
-             #$room->once("play_by:$them" => sub ($tx,$game) {
-             #  $c->notify($_ => $game) for $game->players;
-             #} );
            }
        } else {
            if (my $game = $room->want_game($us, $ours)) {
-             debug "$us: found a game, playing";
+             debug "$us: found a game to play ".$game->id;
+             debug Dumper($game);
              $game->shoot($us => $ours);
+             $game->set or die "issue with game";
              $c->notify($_ => $game) for $game->players;
              $room->pair_up($game->players);
              debug $game->summary;
              $room->leave_game($_) for $game->players;
            } else {
-             $room->once("seek", sub ($room, $them, $game) {
-                debug "$us: seek by $them playing";
-                $game->shoot($us => $ours);
-                $c->notify($_ => $game) for $game->players;
-                $room->pair_up($game->players);
-                debug $game->summary;
-                $room->leave_game($_) for $game->players;
-             });
+             #$room->once("seek", sub ($room, $them, $game) {
+             #   debug "$us: found a seek by $them";
+             #$game->shoot($us => $ours);
+                #   $c->notify($_ => $game) for $game->players;
+                #   $room->pair_up($game->players);
+                #  debug $game->summary;
+                #$room->leave_game($_) for $game->players;
+                #});
            }
        }
      });
