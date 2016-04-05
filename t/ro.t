@@ -47,5 +47,7 @@ is_deeply $p2_result, {
     game     => 1
   }, "right result";
 
+$t->get_ok('/games')->json_is({available => 0});
+
 done_testing();
 

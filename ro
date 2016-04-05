@@ -43,6 +43,10 @@ get '/' => sub ($c) {
   $c->render(text => "Welcome to ro.  Make a websocket connection to /ready.\n");
 };
 
+get '/games' => sub ($c) {
+  $c->render(json => { available => $room->available });
+};
+
 websocket '/ready' => sub($c) {
   # $us, $them are ids
   # $ours, $theirs are rock/paper/scissors

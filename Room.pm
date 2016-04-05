@@ -60,4 +60,8 @@ sub playing($s,$p) {
   return exists($played{$p});
 }
 
+sub available {
+  return scalar @available;
+}
+
 1;
