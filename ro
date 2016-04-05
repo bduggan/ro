@@ -47,6 +47,8 @@ helper shoot => sub ($c,$p1,$p2,$h1,$h2) {
   # play: player 1,2 hand 1,2
   my $winner = $c->winner($h1,$h2);
   my $id = $room->game_over($p1,$p2);
+  debug "got game id $id";
+  die "--------------------" if $id==-1;
   $c->notify($p1, $h1, $winner, $p2, $h2, $id);
   $c->notify($p2, $h2, $winner, $p1, $h1, $id);
 };
@@ -71,27 +73,40 @@ websocket '/ready' => sub($c) {
 
      $tx->on(message => sub ($tx, $ours) {
        $ours =~ /^(rock|paper|scissors)$/ or return $tx->send({ json => { error => "wat? ($ours)" } });
-       debug "$us plays $ours";
+       $room->playing($us) and return $tx->send({json => { error => "only one hand at a time, please" } });
+       debug "$us: $us plays $ours";
        if (my $them = $room->has_partner($us)) {
+           debug "$us: $us already has partner $them.  $us is revealing $ours";
            $room->reveal($us, $ours);
            if (my $theirs = $room->played($them) ) {
+               debug "$us: $them has already played ($theirs)";
                $c->shoot($us,$them,$ours,$theirs);
            } else {
-               $room->on("play_by:$them" => sub ($tx, $theirs) {
+               debug "$us: $them has not played yet";
+               $room->once("play_by:$them" => sub ($tx, $theirs) {
                   $c->shoot($us,$them,$ours,$theirs);
-                  $room->unsubscribe("play_by:$them");
                });
            }
        } else {
            $room->enter($us, $ours);
-           $room->on("seek", sub ($room, $them, $theirs) {
-               $room->pair_up($us,$them) or return;
+           $room->once("seek", sub ($room, $them, $theirs) {
+               debug "$us: seek by $them is noticed by $us";
+               $room->pair_up($us,$them) or do {
+                  debug "$us: failed to pair $us and $them";
+                  # XXX resubscribe
+                  return;
+               };
+               debug "$us: seek by $them resulted in pairing with $us";
                $c->shoot($us,$them,$ours,$theirs);
            });
        }
      });
   });
 };
+
+Mojo::IOLoop->singleton->reactor->on(error => sub($io,$err) {
+  debug "error: $err";
+});
 
 app->start;
 

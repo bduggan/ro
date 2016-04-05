@@ -42,12 +42,24 @@ sub reveal($s,$id,$what) {
 }
 
 sub game_over($s,$p1,$p2) {
-  my $elapsed = abs $played_at{$p1} - $played_at{$p2};
-  delete $played{$_} for $p1, $p2;
-  delete $played_at{$_} for $p1, $p2;
+  for ($p1,$p2) {
+    next if $played_at{$_} && $played{$_};
+    $s->log->debug("no timestamp for $_, invalid game");
+    return -1;
+  }
+  if (exists $game_time{$game_id}) {
+    delete $played{$p1};
+    delete $played_at{$p1};
+  } else {
+    $game_time{$game_id} //= abs $played_at{$p1} - $played_at{$p2};
+  }
   $game_id++;
   $s->log->debug("game $game_id: $p1 vs $p2 took $elapsed seconds");
   return $game_id;
+}
+
+sub playing($s,$p) {
+  return exists($played{$p});
 }
 
 1;
