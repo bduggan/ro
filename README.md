@@ -14,7 +14,11 @@
 
   ./ro test
 
-3. Run.
+3. Optional:
+
+   Copy ro.conf.example to ro.conf and change the values.
+
+4. Run.
 
     ./ro daemon
 
