@@ -13,6 +13,10 @@ sub debug($) { app->log->debug(@_) }
 my %players;     # $id => $tx
 my $room = Room->new(log => app->log);
 
+app->plugin('Config', default => { timeout => 2 } );
+my $conf = app->config;
+$Game::TIMEOUT = $conf->{timeout};
+
 app->hook(after_dispatch => sub($c) {
   $c->res->headers->header('Access-Control-Allow-Origin' => '*');
 });

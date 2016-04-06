@@ -4,7 +4,7 @@ use Time::HiRes qw/time/;
 use v5.20;
 use experimental 'signatures';
 
-our $Timeout = 2;  # Games expire after 2 seconds.
+our $TIMEOUT = 2;  # Games expire after $TIMEOUT seconds.
 
 # p1, p2: player 1,2 hand 1,2
 has 'id' => sub { state $i; ++$i; };
@@ -58,7 +58,7 @@ sub expired($g) {
     my @times = values %{ $g->times };
     return 0 if @times==2;
     my $diff = time - $times[0];
-    return $diff > $Timeout;
+    return $diff > $TIMEOUT;
 }
 
 1;
