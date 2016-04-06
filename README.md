@@ -22,4 +22,8 @@
 
     ./ro daemon
 
+5. Deploy:
+
+    hypnotoad ./ro
+
 ```
