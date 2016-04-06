@@ -4,9 +4,10 @@ use Time::HiRes qw/time/;
 use v5.20;
 use experimental 'signatures';
 
-has 'id' => sub { state $i; ++$i; };
+our $Timeout = 2;  # Games expire after 2 seconds.
 
-# player 1,2 hand 1,2
+# p1, p2: player 1,2 hand 1,2
+has 'id' => sub { state $i; ++$i; };
 has 'played'  => sub { +{} }; # p1 -> h1, p2 -> h2
 has 'times'   => sub { +{} }; # p1 -> t1, p2 -> t2
 has 'winner';  # rock|scissors|paper|tie
@@ -51,6 +52,13 @@ sub summary($g) {
 sub elapsed($g) {
    my ($t1,$t2) = values %{ $g->times };
    return abs($t2 - $t1);
+}
+
+sub expired($g) {
+    my @times = values %{ $g->times };
+    return 0 if @times==2;
+    my $diff = time - $times[0];
+    return $diff > $Timeout;
 }
 
 1;

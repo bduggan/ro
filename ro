@@ -78,8 +78,10 @@ websocket '/ready' => sub($c) {
        debug "$us: $us plays $ours";
        # Do they have a partner?
        my $them = $room->has_partner($us) or do {
+           debug "$us: no partner yet";
            # Is there a game in progress?
            my $game = $room->find_game($us, $ours) or return;
+           debug "$us: found a game";
            # Pair and play.
            $game->pair( $room->pair_up($game->players, $us) );
            return $c->play($us, $ours, $game);

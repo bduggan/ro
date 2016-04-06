@@ -12,9 +12,17 @@ sub has_partner($s,$id) {
   return $partner_for{$id};
 }
 
+sub _next_available {
+    # Really there should only be at most one available game.
+    my $next = shift @available or return;
+    $next = shift @available while @available && $next->expired;
+    return if $next->expired;
+    return $next;
+}
+
 sub find_game($s,$who,$what) {
-  if (@available) {
-    return $s->assign($who => shift @available);
+  if (my $g = $s->_next_available) {
+    return $s->assign($who => $g);
   }
   my $game = Game->new;
   $game->shoot($who => $what);
@@ -31,8 +39,19 @@ sub pair_up($s,$one,$two) {
   return $s->_pair($one,$two);
 }
 
+sub expire_old_games($s) {
+  for my $k (keys %game_of) {
+    my $g = $game_of{$k};
+    next unless $g->expired;
+    $s->leave_game($_) for $g->players;
+  }
+}
+
 sub playing($s,$p) {
-   return $game_of{$p};
+   my $g = $game_of{$p} or return;
+   return $g unless $g->expired;
+   $s->leave_game($_) for $g->players;
+   return;
 }
 
 sub leave_game($s,$p) {
