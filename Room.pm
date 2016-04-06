@@ -39,14 +39,6 @@ sub pair_up($s,$one,$two) {
   return $s->_pair($one,$two);
 }
 
-sub expire_old_games($s) {
-  for my $k (keys %game_of) {
-    my $g = $game_of{$k};
-    next unless $g->expired;
-    $s->leave_game($_) for $g->players;
-  }
-}
-
 sub playing($s,$p) {
    my $g = $game_of{$p} or return;
    return $g unless $g->expired;
