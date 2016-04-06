@@ -35,7 +35,8 @@ helper notify => sub ($c,$us,$game) {
             yours    => $ours,
             opponent => $them,
             theirs   => $theirs,
-            game     => $game->id
+            game     => $game->id,
+            pair     => $game->pair,
         }
     });
 };
@@ -59,8 +60,7 @@ websocket '/ready' => sub($c) {
   $c->on(message => sub ($c,$msg) {
      $msg eq 'hello' or return debug 'did not say hello';
 
-     # $us, $them are ids
-     # $ours, $theirs are rock/paper/scissors
+     # $us, $them are ids.  $ours, $theirs are rock/paper/scissors
      my $us = $c->new_player;
      debug "New player: $us";
      my $tx = $c->tx;
@@ -81,11 +81,12 @@ websocket '/ready' => sub($c) {
            # Is there a game in progress?
            my $game = $room->find_game($us, $ours) or return;
            # Pair and play.
-           $room->pair_up($game->players, $us);
+           $game->pair( $room->pair_up($game->players, $us) );
            return $c->play($us, $ours, $game);
        };
        # Have a partner, did they play already?
-       my $game = $room->playing($them) or return $room->add_game($us, $ours);
+       my $game = $room->playing($them)
+           or return $room->add_game($us, $ours, $room->paired($us,$them));
        # Partner has played.
        $c->play($us, $ours, $game);
      });

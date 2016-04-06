@@ -28,6 +28,7 @@ sub pair_up($s,$one,$two) {
   return if $partner_for{$two};
   $partner_for{$one} = $two;
   $partner_for{$two} = $one;
+  return $s->_pair($one,$two);
 }
 
 sub playing($s,$p) {
@@ -46,11 +47,26 @@ sub available {
   return scalar @available;
 }
 
-sub add_game($s,$p,$h) {
-    my $game = Game->new;
+sub add_game($s,$p,$h,$pair) {
+    my $game = Game->new(pair => $pair);
     $game_of{$p} = $game;
     $game->shoot($p => $h);
     $game;
+}
+
+{
+my $pair_counter = 1;
+my %used;
+sub _pair($s,$p1,$p2) {
+    # new id for p1 + p2
+    ($p1,$p2) = ($p2,$p1) if $p2 < $p1;
+    $used{$p1,$p2} = $pair_counter++;
+}
+sub paired($s,$p1,$p2) {
+    # find existing pair id for p1 + p2
+    ($p1,$p2) = ($p2,$p1) if $p2 < $p1;
+    return $used{$p1,$p2};
+}
 }
 
 1;

@@ -37,10 +37,10 @@ Mojo::IOLoop->timer(4 => sub { shift->stop } );
 Mojo::IOLoop->start;
 
 is_deeply \@results,
-  [{you=> 'tie', opponent=> 3, yours=> "rock", theirs=> "rock", game => 1},
-   {you=> 'tie', opponent=> 4, yours=> "paper", theirs=>"paper", game => 2},
-   {you=> 'tie', opponent=> 1, yours=> "rock", theirs=> "rock", game => 1},
-   {you=> 'tie', opponent=> 2, yours=> "paper", theirs=>"paper", game => 2},
+  [{you=> 'tie', opponent=> 3, yours=> "rock", theirs=> "rock", game => 1, pair => 1},
+   {you=> 'tie', opponent=> 4, yours=> "paper", theirs=>"paper", game => 2, pair => 2},
+   {you=> 'tie', opponent=> 1, yours=> "rock", theirs=> "rock", game => 1, pair => 1},
+   {you=> 'tie', opponent=> 2, yours=> "paper", theirs=>"paper", game => 2, pair => 2},
   ], 'ties';
 
 done_testing();

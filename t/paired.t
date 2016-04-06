@@ -44,8 +44,26 @@ for (2,3,4,5) {
   note " ---------------------- game $_ ---------------------------";
   Mojo::IOLoop->timer(0.1 => sub { shift->stop } );
   Mojo::IOLoop->start;
-  is_deeply $results[0], { you=> "lose", opponent=> 2, yours=> "paper", theirs=> "scissors", game => $_}, "right results";
-  is_deeply $results[1], { you=> "win",  opponent=> 1, yours=> "scissors", theirs=> "paper", game => $_}, "right results";
+  is_deeply $results[0],
+    {
+      you      => "lose",
+      yours    => "paper",
+      opponent => 2,
+      theirs   => "scissors",
+      game     => $_,
+      pair     => 1
+    },
+    "right results";
+  is_deeply $results[1],
+    {
+      you      => "win",
+      yours    => "scissors",
+      opponent => 1,
+      theirs   => "paper",
+      game     => $_,
+      pair     => 1
+    },
+    "right results";
 }
 
 done_testing();

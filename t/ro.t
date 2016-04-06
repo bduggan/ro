@@ -36,7 +36,8 @@ is_deeply $p1_result, {
     opponent => 2,
     yours    => "rock",
     theirs   => "scissors",
-    game     => 1
+    game     => 1,
+    pair     => 1,
   }, "right result";
 
 is_deeply $p2_result, {
@@ -44,7 +45,8 @@ is_deeply $p2_result, {
     opponent => 1,
     yours    => "scissors",
     theirs   => "rock",
-    game     => 1
+    game     => 1,
+    pair     => 1,
   }, "right result";
 
 $t->get_ok('/games')->json_is({available => 0});

@@ -10,6 +10,7 @@ has 'id' => sub { state $i; ++$i; };
 has 'played'  => sub { +{} }; # p1 -> h1, p2 -> h2
 has 'times'   => sub { +{} }; # p1 -> t1, p2 -> t2
 has 'winner';  # rock|scissors|paper|tie
+has 'pair';    # unique id for this pair of players
 
 # All set?
 sub set($g) {
