@@ -9,6 +9,8 @@ use Data::Dumper;
 
 $ENV{MOJO_INACTIVITY_TIMEOUT} = 120;
 sub debug($) { app->log->debug(@_) }
+sub error($) { app->log->error(@_) }
+sub info($)  { app->log->info(@_) }
 
 my %players;     # $id => $tx
 my $room = Room->new(log => app->log);
@@ -49,7 +51,7 @@ helper play => sub($c, $us, $ours, $game) {
   $game->shoot($us => $ours);
   $c->notify($_ => $game) for $game->players;
   $room->leave_game($_) for $game->players;
-  debug $game->summary;
+  info $game->summary;
 };
 
 get '/' => sub ($c) {
@@ -62,7 +64,10 @@ get '/games' => sub ($c) {
 
 websocket '/ready' => sub($c) {
   $c->on(message => sub ($c,$msg) {
-     $msg eq 'hello' or return debug 'did not say hello';
+     $msg eq 'hello' or return do {
+      error 'did not say hello';
+      $c->tx->finish(1003);
+     };
 
      # $us, $them are ids.  $ours, $theirs are rock/paper/scissors
      my $us = $c->new_player;
