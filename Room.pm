@@ -80,4 +80,11 @@ sub paired($s,$p1,$p2) {
 }
 }
 
+sub leave($s,$p) {
+  $s->leave_game($p);
+  if (my $other = delete $partner_for{$p}) {
+    delete $partner_for{$other};
+  }
+}
+
 1;

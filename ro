@@ -72,6 +72,10 @@ websocket '/ready' => sub($c) {
      $players{$us} = $tx;
      $tx->unsubscribe('message');
 
+     $tx->on(finish => sub ($tx) {
+       $room->leave($us);
+     });
+
      # Establish connection but don't pair until we play.
      $tx->on(message => sub ($tx, $ours) {
        $ours =~ /^(rock|paper|scissors)$/
