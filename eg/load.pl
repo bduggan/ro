@@ -4,17 +4,16 @@ use v5.20;
 use experimental 'signatures';
 use Mojo::UserAgent;
 use Data::Dumper;
-use Benchmark::Timer;
 
 my $host = shift || 'rock:8100';
 $host =~ s[http://][];
 my $url = "ws://$host/ready";
-my $ua = Mojo::UserAgent->new;
+my $ua = Mojo::UserAgent->new(connect_timeout => 60, inactivity_timeout => 60);
 
 my %results;
 
-for my $i (1..1000) {
-  for my $play (qw/rock scissors/) {
+for my $i (1..300) {
+  for my $play (qw/rock scissors paper/) {
 
     $ua->websocket($url => sub {
       my ($ua, $tx) = @_;
