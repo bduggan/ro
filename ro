@@ -108,3 +108,6 @@ app->start;
 __DATA__
 @@ exception.html.ep
 %== $exception
+
+@@ not_found.html.ep
+not found
