@@ -7,7 +7,8 @@ use lib '.';
 use Room;
 use Data::Dumper;
 
-$ENV{MOJO_INACTIVITY_TIMEOUT} = 120;
+$ENV{MOJO_INACTIVITY_TIMEOUT} //= 10;
+
 sub debug($) { app->log->debug(@_) }
 sub error($) { app->log->error(@_) }
 sub info($)  { app->log->info(@_) }
