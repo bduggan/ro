@@ -6,6 +6,7 @@ use experimental 'signatures';
 use lib '.';
 use Room;
 use Data::Dumper;
+use Carp;
 
 $ENV{MOJO_INACTIVITY_TIMEOUT} //= 10;
 
@@ -109,9 +110,11 @@ websocket '/ready' => sub($c) {
   });
 };
 
-Mojo::IOLoop->singleton->reactor->on(error => sub($io,$err) {
-  Carp::cluck;
-  debug "error: $err";
+Mojo::IOLoop->singleton->reactor->on(error => sub {
+  my ($io,$err) = @_;
+  $err //= '(none)';
+  error "error: $err";
+  error Carp::longmess;
 });
 
 app->start;
