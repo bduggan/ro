@@ -79,7 +79,7 @@ websocket '/ready' => sub($c) {
      $players{$us} = $tx;
      $tx->unsubscribe('message');
 
-     $tx->on(finish => sub($tx,$id) {
+     $tx->on(finish => sub {
        $room->leave($us);
      });
 
