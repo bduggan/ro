@@ -1,5 +1,11 @@
 [![Build Status](https://travis-ci.org/bduggan/ro.svg?branch=master)](https://travis-ci.org/bduggan/ro)
 
+This is a simple backend to play rock scissors paper.
+
+A front-end can be found be found here: <https://github.com/ryanhinkel/rockpaperscissors>.
+
+A sample deployment is at <http://play.promptworks.com>.
+
 ```
 1. Install deps.
 
