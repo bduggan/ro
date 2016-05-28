@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/bduggan/ro.svg?branch=master)](https://travis-ci.org/bduggan/ro)
 
-This is a simple backend to play rock scissors paper.
+This is a simple backend to play rock-paper-scissors.
 
 A front-end can be found be found here: <https://github.com/ryanhinkel/rockpaperscissors>.
 
