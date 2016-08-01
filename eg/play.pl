@@ -5,8 +5,8 @@ use experimental 'signatures';
 use Mojo::UserAgent;
 use Data::Dumper;
 
-my $host = shift || 'rock:8100';
-my $url = "ws://$host/ready";
+my $host = shift || 'play.promptworks.com:8100';
+my $url = "wss://$host/ready";
 my $ua = Mojo::UserAgent->new;
 
 for my $play (qw/rock scissors/) {
